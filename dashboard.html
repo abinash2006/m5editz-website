@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M5 EDITZ - Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--gold:#F5B800;--gold2:#FFD700;--dark:#06060A;--dark2:#0D0D14;--dark3:#13131C;--card:#14141E;--text:#E0E0F0;--muted:#606080;--red:#E63030;--green:#22C55E;--blue:#3B82F6;--glow:0 0 30px rgba(245,184,0,.4);}
+body{background:var(--dark);color:var(--text);font-family:'Rajdhani',sans-serif;min-height:100vh;}
+.topbar{background:var(--dark2);border-bottom:1px solid rgba(255,255,255,.06);padding:0 48px;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;}
+.tb-logo{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--gold);letter-spacing:3px;}
+.tb-logo span{color:#fff;}
+.tb-right{display:flex;align-items:center;gap:10px;}
+.tb-label{font-size:11px;color:var(--muted);letter-spacing:2px;padding:0 12px;border-right:1px solid rgba(255,255,255,.08);}
+.btn-export{background:var(--gold);color:var(--dark);padding:9px 20px;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:11px;letter-spacing:2px;border:none;cursor:pointer;text-transform:uppercase;transition:.3s;clip-path:polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%);}
+.btn-export:hover{background:var(--gold2);box-shadow:var(--glow);}
+.btn-sm{background:transparent;border:1px solid rgba(255,255,255,.12);color:var(--muted);padding:8px 16px;font-size:10px;letter-spacing:2px;cursor:pointer;transition:.3s;font-family:'Rajdhani',sans-serif;text-transform:uppercase;}
+.btn-sm:hover{border-color:var(--gold);color:var(--gold);}
+.btn-danger{border-color:rgba(230,48,48,.3);color:rgba(230,48,48,.7);}
+.btn-danger:hover{border-color:var(--red);color:var(--red);}
+.dash-head{background:linear-gradient(135deg,var(--dark2),var(--dark3));padding:28px 48px;border-bottom:1px solid rgba(255,255,255,.04);position:relative;overflow:hidden;}
+.dash-head::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+.dh-title{font-family:'Bebas Neue',sans-serif;font-size:32px;color:#fff;letter-spacing:3px;}
+.dh-title span{color:var(--gold);}
+.dh-sub{font-size:11px;color:var(--muted);letter-spacing:3px;margin-top:4px;text-transform:uppercase;}
+.firebase-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(245,184,0,.08);border:1px solid rgba(245,184,0,.2);padding:4px 12px;font-size:10px;color:var(--gold);letter-spacing:2px;margin-top:8px;}
+.firebase-pill::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 1.5s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;background:rgba(255,255,255,.03);}
+.stat-card{background:var(--dark2);padding:24px 28px;position:relative;overflow:hidden;transition:.3s;}
+.stat-card::after{content:'';position:absolute;bottom:0;left:0;width:0;height:2px;background:var(--gold);transition:width .4s;}
+.stat-card:hover::after{width:100%;}
+.sc-num{font-family:'Bebas Neue',sans-serif;font-size:48px;color:var(--gold);line-height:1;}
+.sc-label{font-size:10px;letter-spacing:4px;color:var(--muted);text-transform:uppercase;margin-top:4px;}
+.sc-icon{position:absolute;top:16px;right:20px;font-size:28px;opacity:.12;}
+.dash-body{padding:32px 48px;}
+.email-alert{display:none;background:rgba(245,184,0,.08);border:1px solid rgba(245,184,0,.25);padding:14px 20px;margin-bottom:20px;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.email-alert.on{display:flex;}
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+.sec-title{font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;letter-spacing:3px;}
+.sec-title span{color:var(--gold);}
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;}
+.filter-btn{background:transparent;border:1px solid rgba(255,255,255,.1);color:var(--muted);padding:6px 14px;font-size:10px;letter-spacing:2px;cursor:pointer;transition:.3s;font-family:'Rajdhani',sans-serif;text-transform:uppercase;}
+.filter-btn.active,.filter-btn:hover{border-color:var(--gold);color:var(--gold);}
+.table-wrap{overflow-x:auto;background:var(--card);border:1px solid rgba(255,255,255,.06);}
+table{width:100%;border-collapse:collapse;min-width:1000px;}
+thead tr{background:var(--dark3);}
+th{text-align:left;padding:14px 16px;font-size:10px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;white-space:nowrap;border-bottom:1px solid rgba(255,255,255,.06);}
+td{padding:14px 16px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.04);transition:background .2s;white-space:nowrap;}
+tr:hover td{background:rgba(255,255,255,.02);}
+.td-id{font-family:'Orbitron',sans-serif;font-size:11px;color:var(--muted);}
+.td-name{font-weight:700;color:var(--text);}
+.td-svc{color:var(--gold);}
+.td-phone a{color:var(--blue);text-decoration:none;}
+.td-phone a:hover{color:var(--gold2);}
+.status-badge{display:inline-block;padding:3px 10px;font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:700;border-radius:2px;}
+.status-Pending{background:rgba(245,184,0,.12);color:var(--gold);}
+.status-Confirmed{background:rgba(34,197,94,.12);color:var(--green);}
+.status-InProgress{background:rgba(59,130,246,.12);color:var(--blue);}
+.status-Delivered{background:rgba(34,197,94,.2);color:#4ade80;}
+.status-Cancelled{background:rgba(230,48,48,.12);color:var(--red);}
+.action-btn{background:transparent;border:1px solid rgba(255,255,255,.08);color:var(--muted);padding:5px 10px;font-size:10px;cursor:pointer;transition:.3s;font-family:'Rajdhani',sans-serif;margin-left:4px;}
+.action-btn:hover{border-color:var(--gold);color:var(--gold);}
+.del-btn{border-color:rgba(230,48,48,.2);color:rgba(230,48,48,.6);}
+.del-btn:hover{border-color:var(--red);color:var(--red);}
+.empty{text-align:center;padding:80px 20px;color:var(--muted);}
+.empty-icon{font-size:48px;margin-bottom:16px;display:block;opacity:.4;}
+.empty-msg{font-size:14px;letter-spacing:2px;}
+.loading{text-align:center;padding:60px;color:var(--muted);font-size:12px;letter-spacing:4px;}
+@media(max-width:768px){
+  .topbar,.dash-head,.dash-body{padding-left:20px;padding-right:20px;}
+  .stat-row{grid-template-columns:repeat(2,1fr);}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-logo">M5<span>EDITZ</span></div>
+  <div class="tb-right">
+    <span class="tb-label" id="tb-count">Loading...</span>
+    <button class="btn-sm" onclick="loadBookings()">Refresh</button>
+    <button class="btn-sm btn-danger" onclick="confirmClearAll()">Clear All</button>
+    <button class="btn-export" onclick="exportExcel()">Export Excel</button>
+    <button class="btn-sm" onclick="logout()">Sign Out</button>
+  </div>
+</div>
+
+<div class="dash-head">
+  <div class="dh-title">Admin <span>Dashboard</span></div>
+  <div class="dh-sub">M5 Editz Studio - Booking Management</div>
+  <div class="firebase-pill">Firebase + localStorage - Live Data</div>
+</div>
+
+<div class="stat-row">
+  <div class="stat-card"><div class="sc-num" id="st-total">-</div><div class="sc-label">Total Bookings</div><div class="sc-icon">&#128203;</div></div>
+  <div class="stat-card"><div class="sc-num" id="st-pending">-</div><div class="sc-label">Pending</div><div class="sc-icon">&#9203;</div></div>
+  <div class="stat-card"><div class="sc-num" id="st-progress">-</div><div class="sc-label">In Progress</div><div class="sc-icon">&#127916;</div></div>
+  <div class="stat-card"><div class="sc-num" id="st-done">-</div><div class="sc-label">Delivered</div><div class="sc-icon">&#10003;</div></div>
+</div>
+
+<div class="dash-body">
+  <div class="email-alert" id="emailAlert">
+    <div style="font-size:13px;color:var(--gold);">
+      <strong>&#128231; Pending confirmation email</strong> - A customer is waiting for their booking confirmation.
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button id="sendPendingBtn" style="background:var(--gold);color:var(--dark);border:none;padding:8px 18px;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:11px;letter-spacing:2px;cursor:pointer;">Send Now</button>
+      <button onclick="dismissPendingEmail()" style="background:transparent;border:1px solid rgba(245,184,0,.3);color:var(--muted);padding:8px 14px;font-size:11px;cursor:pointer;">&#10005;</button>
+    </div>
+  </div>
+
+  <div class="sec-hd">
+    <div class="sec-title">All <span>Bookings</span></div>
+    <div class="filter-row">
+      <button class="filter-btn active" onclick="setFilter('All',this)">All</button>
+      <button class="filter-btn" onclick="setFilter('Pending',this)">Pending</button>
+      <button class="filter-btn" onclick="setFilter('Confirmed',this)">Confirmed</button>
+      <button class="filter-btn" onclick="setFilter('InProgress',this)">In Progress</button>
+      <button class="filter-btn" onclick="setFilter('Delivered',this)">Delivered</button>
+      <button class="filter-btn" onclick="setFilter('Cancelled',this)">Cancelled</button>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Booking ID</th>
+          <th>Date</th>
+          <th>Customer</th>
+          <th>Phone</th>
+          <th>Email</th>
+          <th>Service</th>
+          <th>Deadline</th>
+          <th>Budget</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="bookingsTbody">
+        <tr><td colspan="10"><div class="loading">Loading bookings...</div></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+// Guard: Admin only
+if (!localStorage.getItem('m5_admin')) { window.location.href = 'login.html'; }
+
+var allBookings = [];
+var currentFilter = 'All';
+
+// Build a mailto URL safely using a join to avoid & entity issues
+function buildMailto(to, subject, body) {
+  return 'mailto:' + to + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+}
+
+async function loadBookings() {
+  var tbody = document.getElementById('bookingsTbody');
+  tbody.innerHTML = '<tr><td colspan="10"><div class="loading">Loading...</div></td></tr>';
+  var merged = {};
+
+  // 1. From Firebase - no orderBy (bookedAt is a locale string, not Timestamp)
+  try {
+    var snap = await db.collection('bookings').get();
+    snap.forEach(function(doc) {
+      var d = Object.assign({}, doc.data(), { _docId: doc.id });
+      if (d.id) merged[d.id] = d;
+    });
+  } catch(e) { console.warn('Firestore skipped:', e.message); }
+
+  // 2. From localStorage - always works, even without Firebase
+  try {
+    var local = JSON.parse(localStorage.getItem('m5_bookings') || '[]');
+    local.forEach(function(b) { if (b.id && !merged[b.id]) merged[b.id] = b; });
+  } catch(_) {}
+
+  // Sort newest first by epoch in ID (M5-<epoch>)
+  allBookings = Object.values(merged).sort(function(a, b) {
+    var ta = parseInt((a.id || '').replace('M5-', '')) || 0;
+    var tb = parseInt((b.id || '').replace('M5-', '')) || 0;
+    return tb - ta;
+  });
+
+  updateStats();
+  renderTable();
+  checkPendingEmail();
+}
+
+function updateStats() {
+  document.getElementById('st-total').textContent   = allBookings.length;
+  document.getElementById('st-pending').textContent = allBookings.filter(function(b){ return b.status === 'Pending'; }).length;
+  document.getElementById('st-progress').textContent= allBookings.filter(function(b){ return b.status === 'InProgress'; }).length;
+  document.getElementById('st-done').textContent    = allBookings.filter(function(b){ return b.status === 'Delivered'; }).length;
+  document.getElementById('tb-count').textContent   = allBookings.length + ' total bookings';
+}
+
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderTable();
+}
+
+function renderTable() {
+  var tbody = document.getElementById('bookingsTbody');
+  var data = currentFilter === 'All' ? allBookings : allBookings.filter(function(b) { return b.status === currentFilter; });
+
+  if (!data.length) {
+    var msg = currentFilter === 'All'
+      ? 'No bookings yet. Share your website to start receiving bookings!'
+      : 'No ' + currentFilter + ' bookings.';
+    tbody.innerHTML = '<tr><td colspan="10"><div class="empty"><span class="empty-icon">&#128237;</span><div class="empty-msg">' + msg + '</div></div></td></tr>';
+    return;
+  }
+
+  var html = '';
+  for (var i = 0; i < data.length; i++) {
+    var b = data[i];
+    var statusClass = 'status-' + (b.status || 'Pending').replace(/\s/g, '');
+    var waHref = 'https://wa.me/91' + ((b.whatsapp || b.phone || '').replace(/\s/g, ''));
+    var emailHtml = b.email
+      ? '<a href="mailto:' + b.email + '" style="color:var(--blue);text-decoration:none;font-size:12px;">' + b.email + '</a>'
+      : '-';
+    var emailBtnHtml = b.email
+      ? '<button class="action-btn" data-email="' + b.email + '" data-name="' + (b.name||'') + '" data-id="' + b.id + '" data-svc="' + (b.service||'') + '" data-dl="' + (b.deadline||'') + '" data-bgt="' + (b.budget||'') + '" onclick="sendConfirmEmail(this)" title="Send confirmation email">&#128231;</button>'
+      : '';
+
+    html += '<tr>' +
+      '<td><span class="td-id">' + (b.id || '-') + '</span></td>' +
+      '<td>' + ((b.bookedAt || '').split(',')[0] || '-') + '</td>' +
+      '<td><div class="td-name">' + (b.name || '-') + '</div><div style="font-size:11px;color:var(--muted)">' + (b.city || '') + '</div></td>' +
+      '<td class="td-phone"><a href="tel:' + (b.phone||'') + '">' + (b.phone || '-') + '</a><br><a href="' + waHref + '">WA</a></td>' +
+      '<td>' + emailHtml + '</td>' +
+      '<td class="td-svc">' + (b.serviceIcon || '') + ' ' + (b.service || '-') + '</td>' +
+      '<td>' + (b.deadline || '-') + '</td>' +
+      '<td>' + (b.budget || '-') + '</td>' +
+      '<td><span class="status-badge ' + statusClass + '">' + (b.status || 'Pending') + '</span></td>' +
+      '<td>' +
+        '<select onchange="updateStatus(\'' + b.id + '\',\'' + (b._docId||'') + '\',this.value)" style="background:var(--dark2);border:1px solid rgba(255,255,255,.1);color:var(--muted);padding:5px;font-size:11px;cursor:pointer;">' +
+          '<option>Set Status</option>' +
+          '<option>Pending</option><option>Confirmed</option><option>InProgress</option><option>Delivered</option><option>Cancelled</option>' +
+        '</select>' +
+        emailBtnHtml +
+        '<button class="action-btn del-btn" onclick="deleteBooking(\'' + b.id + '\',\'' + (b._docId||'') + '\')">&#10005;</button>' +
+      '</td>' +
+    '</tr>';
+  }
+  tbody.innerHTML = html;
+}
+
+// Send confirmation email via mailto
+function sendConfirmEmail(btn) {
+  var email    = btn.getAttribute('data-email');
+  var name     = btn.getAttribute('data-name');
+  var id       = btn.getAttribute('data-id');
+  var service  = btn.getAttribute('data-svc');
+  var deadline = btn.getAttribute('data-dl');
+  var budget   = btn.getAttribute('data-bgt') || 'Not specified';
+  var subject  = 'Your Booking is Confirmed - ' + id + ' | M5 EDITZ';
+  var body =
+    'Dear ' + name + ',\n\nThank you for booking with M5 EDITZ!\n\n' +
+    'BOOKING SUMMARY\n' +
+    '----------------------------\n' +
+    'Booking ID : ' + id + '\n' +
+    'Service    : ' + service + '\n' +
+    'Deadline   : ' + deadline + '\n' +
+    'Budget     : ' + budget + '\n\n' +
+    'NEXT STEPS\n' +
+    '----------------------------\n' +
+    '1. Our team will contact you on WhatsApp at ' + OWNER_PHONE + '\n' +
+    '2. Please share your raw footage via Google Drive or WeTransfer\n' +
+    '3. Editing begins and you will receive progress updates via WhatsApp\n\n' +
+    'Thank you for choosing M5 EDITZ!\n\nWarm regards,\nM5 EDITZ Team\nPremium Video Editing Studio';
+  window.location.href = buildMailto(email, subject, body);
+}
+
+// Check for pending email saved by booking.html
+function checkPendingEmail() {
+  var pending = localStorage.getItem('m5_pending_email');
+  var alert   = document.getElementById('emailAlert');
+  if (!alert) return;
+  if (pending) {
+    alert.classList.add('on');
+    var btn = document.getElementById('sendPendingBtn');
+    if (btn) btn.onclick = sendPendingEmail;
+  } else {
+    alert.classList.remove('on');
+  }
+}
+
+function sendPendingEmail() {
+  var pending = null;
+  try { pending = JSON.parse(localStorage.getItem('m5_pending_email')); } catch(_){}
+  if (!pending) return;
+  window.location.href = buildMailto(pending.to, pending.subject, pending.body);
+  localStorage.removeItem('m5_pending_email');
+  checkPendingEmail();
+}
+
+function dismissPendingEmail() {
+  localStorage.removeItem('m5_pending_email');
+  checkPendingEmail();
+}
+
+async function updateStatus(localId, docId, status) {
+  if (!status || status === 'Set Status') return;
+  if (docId) {
+    try { await db.collection('bookings').doc(docId).update({ status: status }); } catch(e) { console.warn(e); }
+  }
+  var local = JSON.parse(localStorage.getItem('m5_bookings') || '[]');
+  var idx = local.findIndex(function(b) { return b.id === localId; });
+  if (idx > -1) { local[idx].status = status; localStorage.setItem('m5_bookings', JSON.stringify(local)); }
+  var found = allBookings.find(function(b) { return b.id === localId; });
+  if (found) found.status = status;
+  updateStats();
+  renderTable();
+}
+
+async function deleteBooking(localId, docId) {
+  if (!confirm('Delete this booking? This cannot be undone.')) return;
+  if (docId) {
+    try { await db.collection('bookings').doc(docId).delete(); } catch(e) {}
+  }
+  var local = JSON.parse(localStorage.getItem('m5_bookings') || '[]');
+  localStorage.setItem('m5_bookings', JSON.stringify(local.filter(function(b) { return b.id !== localId; })));
+  allBookings = allBookings.filter(function(b) { return b.id !== localId; });
+  updateStats();
+  renderTable();
+}
+
+function confirmClearAll() {
+  if (!confirm('This will delete ALL bookings from localStorage. Firebase data stays. Continue?')) return;
+  localStorage.removeItem('m5_bookings');
+  loadBookings();
+}
+
+function exportExcel() {
+  if (!allBookings.length) { alert('No bookings to export.'); return; }
+  var rows = allBookings.map(function(b) {
+    return {
+      'Booking ID': b.id||'', 'Date': b.bookedAt||'', 'Name': b.name||'', 'Phone': b.phone||'',
+      'WhatsApp': b.whatsapp||'', 'Email': b.email||'', 'City': b.city||'', 'Service': b.service||'',
+      'Event Date': b.eventDate||'', 'Deadline': b.deadline||'', 'Length': b.length||'',
+      'Budget': b.budget||'', 'Style': b.style||'', 'Notes': b.notes||'', 'Source': b.source||'', 'Status': b.status||'Pending'
+    };
+  });
+  var ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [{wch:18},{wch:22},{wch:20},{wch:15},{wch:15},{wch:25},{wch:18},{wch:20},{wch:14},{wch:14},{wch:20},{wch:18},{wch:24},{wch:30},{wch:14},{wch:12}];
+  var svcCount = {'Wedding Highlights':0,'YouTube Videos':0,'Reels & Shorts':0};
+  allBookings.forEach(function(b) { if (svcCount[b.service] !== undefined) svcCount[b.service]++; });
+  var ws2 = XLSX.utils.aoa_to_sheet([['Service','Count']].concat(Object.entries(svcCount)));
+  var wb  = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Bookings');
+  XLSX.utils.book_append_sheet(wb, ws2, 'Summary');
+  XLSX.writeFile(wb, 'M5_Editz_Bookings_' + new Date().toISOString().split('T')[0] + '.xlsx');
+}
+
+function logout() {
+  localStorage.removeItem('m5_admin');
+  window.location.href = 'login.html';
+}
+
+// Init
+loadBookings();
+setInterval(loadBookings, 60000);
+</script>
+</body>
+</html>
